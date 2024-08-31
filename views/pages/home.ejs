@@ -1,3 +1,13 @@
 <%- contentFor('body') %>
-<h1>Welcome to My Todo List</h1>
-<p>Organize your tasks efficiently!</p>
+<div class="container">
+    <h1>Welcome to Your Todo App</h1>
+    <p>Organize your tasks efficiently!</p>
+    <% if (!user) { %>
+        <div class="button-group">
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/register" class="btn btn-secondary">Register</a>
+        </div>
+    <% } else { %>
+        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+    <% } %>
+</div>

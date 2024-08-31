@@ -1,99 +1,142 @@
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
-import bcrypt from "bcrypt";
 
-const loadRegister = async (req, res) => {
+// @desc    Register a new user
+// @route   POST /api/users
+// @access  Public
+export const registerUser = async (req, res) => {
   try {
-    res.render("registration");
-  } catch (error) {
-    console.error("Error in loadRegister:", error.message);
-    res
-      .status(500)
-      .render("error", { message: "An error occurred. Please try again." });
-  }
-};
+    const { name, email, password } = req.body;
 
-const insertUser = async (req, res) => {
-  try {
-    const user = new User({
-      name: req.body.name,
-      email: req.body.email,
-      mobile: req.body.mno,
-      image: req.file.filename,
-      password: req.body.password,
-      isAdmin: false,
-      isVerified: false,
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
     });
 
-    const userData = await user.save();
-
-    if (userData) {
-      res.render("registration", {
-        message:
-          "Your registration has been successful. Please verify your email.",
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token: generateToken(user._id),
       });
     } else {
-      res.render("registration", { message: "Your registration has failed." });
+      res.status(400).json({ message: "Invalid user data" });
     }
   } catch (error) {
-    console.error("Error in insertUser:", error.message);
-    res
-      .status(500)
-      .render("registration", {
-        message: "An error occurred during registration. Please try again.",
-      });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-const loginLoad = async (req, res) => {
-  try {
-    res.render("login");
-  } catch (error) {
-    console.error("Error in loginLoad:", error.message);
-    res
-      .status(500)
-      .render("error", { message: "An error occurred. Please try again." });
-  }
-};
-
-const verifyLogin = async (req, res) => {
+// @desc    Authenticate a user
+// @route   POST /api/users/login
+// @access  Public
+export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const userData = await User.findOne({ email });
 
-    if (!userData) {
-      return res.render("login", { message: "Invalid email or password." });
+    // Check for user email
+    const user = await User.findOne({ email });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(401).json({ message: "Invalid email or password" });
     }
-
-    const passwordMatch = await userData.comparePassword(password);
-    if (!passwordMatch) {
-      await userData.incrementLoginAttempts();
-      return res.render("login", { message: "Invalid email or password." });
-    }
-
-    if (!userData.isVerified) {
-      return res.render("login", { message: "Please verify your email." });
-    }
-
-    await userData.resetLoginAttempts();
-    req.session.user_id = userData._id;
-    res.redirect("/todo");
   } catch (error) {
-    console.error("Error in verifyLogin:", error.message);
-    res
-      .status(500)
-      .render("login", { message: "An error occurred. Please try again." });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-const loadHome = async (req, res) => {
+// @desc    Logout user / clear cookie
+// @route   POST /api/users/logout
+// @access  Private
+export const logoutUser = (req, res) => {
+  res.cookie("jwt", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+  res.status(200).json({ message: "User logged out successfully" });
+};
+
+// @desc    Get user profile
+// @route   GET /api/users/profile
+// @access  Private
+export const getUserProfile = async (req, res) => {
   try {
-    res.render("home");
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
   } catch (error) {
-    console.error("Error in loadHome:", error.message);
-    res
-      .status(500)
-      .render("error", { message: "An error occurred. Please try again." });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-export { loadRegister, insertUser, loginLoad, verifyLogin, loadHome };
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+
+      if (req.body.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(req.body.password, salt);
+      }
+
+      const updatedUser = await user.save();
+
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        token: generateToken(updatedUser._id),
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+};

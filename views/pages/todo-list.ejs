@@ -1,0 +1,14 @@
+<%- contentFor('body') %>
+<div class="container">
+    <h1>Your Todo List</h1>
+    <form action="/todo/add" method="POST" class="add-todo-form">
+        <input type="text" name="task" placeholder="Enter a new task" required>
+        <button type="submit" class="btn btn-primary">Add Task</button>
+    </form>
+    <ul class="todo-list">
+        <% todos.forEach(function(todo) { %>
+            <%- include('../partials/todo-item', {todo: todo}) %>
+        <% }); %>
+    </ul>
+</div>
+<script src="/assets/js/todo.js"></script>

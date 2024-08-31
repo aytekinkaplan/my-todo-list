@@ -1,16 +1,22 @@
-// userRoute.js
 import express from "express";
-import { auth } from "../middleware/auth.js";
-import * as userController from "../controllers/userController.js";
-import upload from "../middleware/multerConfig.js";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getUserProfile,
+  updateUserProfile,
+} from "../controllers/userController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/register", userController.loadRegister);
-router.post("/register", upload.single("image"), userController.insertUser);
-router.get("/login", userController.loginLoad);
-router.post("/login", userController.verifyLogin);
-router.get("/home", auth, userController.loadHome);
-router.get("/logout", auth, userController.logout);
+// Public routes
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+
+// Protected routes
+router.get("/profile", protect, getUserProfile);
+router.put("/profile", protect, updateUserProfile);
+router.post("/logout", protect, logoutUser);
 
 export default router;

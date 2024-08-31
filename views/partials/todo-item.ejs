@@ -1,0 +1,5 @@
+<li class="todo-item" data-id="<%= todo._id %>">
+  <input type="checkbox" class="todo-checkbox" <%= todo.completed ? 'checked' : '' %>>
+  <span class="todo-text <%= todo.completed ? 'completed' : '' %>"><%= todo.task %></span>
+  <button class="btn btn-delete">Delete</button>
+</li>

@@ -1,0 +1,16 @@
+<%- contentFor('body') %>
+<div class="container">
+  <h1>Dashboard</h1>
+  <p>Welcome, <%= user.name %>!</p>
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <h3>Total Tasks</h3>
+      <p><%= totalTasks %></p>
+    </div>
+    <div class="stat-card">
+      <h3>Completed Tasks</h3>
+      <p><%= completedTasks %></p>
+    </div>
+  </div>
+  <a href="/todo" class="btn btn-primary">View Todo List</a>
+</div>

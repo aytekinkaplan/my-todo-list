@@ -1,0 +1,28 @@
+/* Responsive Styles */
+@media (max-width: 768px) {
+  header .logo,
+  header nav,
+  header nav li,
+  .container {
+    float: none;
+    text-align: center;
+    width: 100%;
+  }
+
+  header {
+    padding-bottom: 20px;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+  }
+
+  .todo-item {
+    flex-direction: column;
+  }
+
+  .btn-delete {
+    margin-top: 10px;
+  }
+}
