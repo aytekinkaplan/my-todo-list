@@ -1,13 +1,12 @@
-// index.js (main router file)
 import express from "express";
-import userRoute from "./userRoute.js";
-import adminRoute from "./adminRoute.js";
-import todoRoute from "./todo.js";
+import userRoutes from "./userRoute.js";
+import todoRoutes from "./todo.js";
+import adminRoutes from "./adminRoute.js";
 
 const router = express.Router();
 
-router.use("/", userRoute);
-router.use("/admin", adminRoute);
-router.use("/todo", todoRoute);
+router.use("/", userRoutes);
+router.use("/todo", todoRoutes);
+router.use("/admin", adminRoutes);
 
 export default router;

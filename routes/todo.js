@@ -1,6 +1,4 @@
-// todo.js
-import express from "express";
-import { auth } from "../middleware/authMiddleware.js";
+import { protect as auth } from "../middleware/authMiddleware.js";
 import * as todoController from "../controllers/todoController.js";
 
 const router = express.Router();
